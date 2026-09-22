@@ -11,6 +11,24 @@
 
 ---
 
+### 🍴 About This Fork
+
+This is a fork of the original [AyuSync (SwasthyaSetu)](https://github.com/Naman354/AyuSync) repository, built as a team project for **Smart India Hackathon (SIH 2026)**. Full credit to the team — this fork exists to document and showcase my individual contributions.
+
+**My Role:** Sole developer of the Flutter mobile application (`app/`) — the offline-first frontline worker (ASHA/ANM) client.
+
+**Key Contributions:**
+- Architected the app's core layer (`lib/core/`) - reactive state management via a central `AppState` (Provider/ChangeNotifier), and singleton services for API access, local storage, and sync.
+- Built an offline-first data layer using SQLite (`sqflite`) with a FIFO sync queue that batches and pushes local mutations to the backend on reconnect, including atomic reconciliation of temporary local IDs with server-issued IDs across linked records.
+- Implemented a network quality service that goes beyond basic connectivity checks — actively probes HTTP latency and falls back to DNS lookups to distinguish "online," "poor," and "offline" states on unreliable rural networks.
+- Built a dual-tier triage flow: instant on-device rule-based risk scoring from vitals, plus an asynchronous call to the backend AI service for refined results - so field workers get immediate feedback without waiting on network/AI latency.
+- Developed the full mobile UI/UX across patient registration, clinical vitals assessment, AI triage results, facility routing, and the counter-referral follow-up inbox.
+- Added trilingual localization (English, Hindi, Marathi) with instant in-app language switching, and integrated device-level speech-to-text for hands-free symptom entry.
+- Wrote the client-side test suite (`app/test/`) covering localization, registration validation, session persistence, network state handling, and speech recognition.
+
+**Team:** Vinay Papnoi (Mobile App Developer), Naman Srivastava, Siddharth Singh, Shivansh Kumar - backend, web dashboard, and AI microservice built by teammates. See original repo for full team credits.
+
+---
 ## 📌 1. Executive Summary & Problem Context
 
 In rural India, healthcare delivery across **Sub-Centers / Health & Wellness Centers (HWCs) ➔ Primary Health Centres (PHCs) ➔ Community Health Centres (CHCs) ➔ District Hospitals** is plagued by fragmented, paper-based workflows, intermittent network connectivity, and unmonitored referrals.
@@ -282,7 +300,11 @@ cd app
 # 1. Fetch Flutter packages
 flutter pub get
 
-# 2. Launch on connected Android device, emulator, or Chrome
+# 2. Configure backend API URL if running locally (see Section 8 → App)
+# Default connects to production Render. For local backend, point to
+# http://localhost:5000 (or http://10.0.2.2:5000 on Android Emulator)
+
+# 3. Launch on connected Android device, emulator, or Chrome
 flutter run
 ```
 
@@ -317,6 +339,18 @@ CORS_ORIGINS="http://localhost:5173,http://localhost:5174,http://localhost:3000"
 VITE_API_URL=http://localhost:5000
 ```
 
+### App (`app/lib/core/network/api_config.dart`)
+The Flutter client's backend URL is managed by the `ApiConfig` class (not a `.env` file):
+
+```dart
+// Default: points to the production cloud backend
+ApiConfig.baseUrl // → "https://ayusync-backend.onrender.com"
+
+// To point at a local backend instead, call:
+ApiConfig.setBaseUrl("http://localhost:5000");
+// On Android Emulator, use http://10.0.2.2:5000 instead of localhost
+// to reach your host machine's backend.
+```
 ---
 
 ## 🧪 9. Verification, Testing & System Health
@@ -357,7 +391,17 @@ Response:
   "timestamp": "2026-09-15T00:30:00.000Z"
 }
 ```
+### 3. Flutter Client Test Suite
+The mobile app includes unit and widget tests covering trilingual localization, patient registration validation, persistent sessions, offline network handling, and voice dictation:
 
+```bash
+cd app
+flutter test
+```
+Expected output:
+```text
+00:08 +66: All tests passed!
+```
 ---
 
 ## 🌐 10. Production Cloud Deployment Guide
